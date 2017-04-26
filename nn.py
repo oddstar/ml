@@ -16,13 +16,17 @@ def print_Weight(w,b):
     print("----------------")
     print("weight:")
     for i in range(len(w)):
-        print(w[i])
+        print("\t%s" % w[i])
     print("bais:")
     for i in range(len(b)):
-        print(b[i])
-    print("---------bias-------")
+        print("\t%s" % b[i])
+    print("----------------\n")
 
-
+def print_array(a,title=""):
+    print("->%s-" % title)
+    for i in range(len(a)):
+        print(a[i])
+    print("-%s<-" % title)
 
 
 class NeuralNetwork:
@@ -42,46 +46,50 @@ class NeuralNetwork:
                 self.bias.append(
                     np.random.random((layers[i+1]))
                 )
-        print_Weight(self.weights,self.bias)
+        # print_Weight(self.weights,self.bias)
 
-    def fit(self,x,y_,learing_rate=0.02, epochs=1):
-        print("--------------fit---------")
+    def fit(self,x,y_,learing_rate=0.5, epochs=100):
+        # print("--------------fit---------")
         for i in range(epochs):
-            a = [x[i]]
-            for w in range(len(self.weights)):
-                tmp = self.activation(
-                    np.dot(a[w], self.weights[w]) + self.bias[w]
-                )
-                a.append(tmp.tolist())
-            print(a)
-            # err = np.power(np.array(y_[i]) - np.array(a[-1]),2) * 1/2
-            err = np.array(a[-1]) - np.array(y_[i])
-            print(err)
+            for j in range(len(x)):
+                a = [x[j]]
+                for w in range(len(self.weights)):
+                    tmp = self.activation(
+                        np.dot(a[w], self.weights[w]) + self.bias[w]
+                    )
+                    a.append(tmp.tolist())
+                # print_array(a,"output")
+                err = np.array(a[-1]) - np.array(y_[j])
+                etotal = np.std(err)
+                deltas = [np.multiply(err,self.activation_deriv(np.array(a[-1])))]
 
-            # deltas = [np.multiply(err,self.activation_deriv(np.array(a[-1])))]
-            deltas = [err]
-            print(deltas)
-            # print("deltas:%s" % deltas)
-            #
-            for w in range(len(self.weights),0,-1):
-                idx = w - 1
-                print("++++++++++++")
-                print("idx:%s" % idx)
-                print("del:%s  w:%s   a%s:%s  a%s:%s" % (deltas[-1],np.array(self.weights[idx]).T,idx,a[idx],w,a[w]))
-                deltas.append(
-                    # deltas[-1].dot(self.weights[w].T) * self.activation_deriv(a[w])
-                    deltas[-1].dot(np.array(a[idx]).T) * self.activation_deriv(np.array(a[w]))
-                )
-                print("deltas:%s" % deltas[len(deltas) - 1])
-            deltas.reverse()
-            # print(deltas)
-            #
-            # print("----update weight---")
-            # for w in range(len(self.weights)):
-            #     print("a:%s  deltas:%s  w:%s" % (a[w],deltas[w],self.weights[w]))
-            #     self.weights[w] += learing_rate * np.array(a[w+1]).T.dot(deltas[w])
-            # print("new_weight:%s" % self.weights)
-            #
+                for w in range(len(self.weights) - 1,0,-1):
+                    # print("idx:%s" % w)
+                    deltas.append(
+                        deltas[-1].dot(np.array(self.weights[w]).T) * self.activation_deriv(np.array(a[w]))
+                     )
+                    # print("del:%s  w:%s   a%s:%s  a%s:%s" % (deltas[-1],np.array(self.weights[idx]).T,idx,a[idx],w,a[w]))
+                    # deltas.append(
+                    #     deltas[-1].dot(self.weights[w].T) * self.activation_deriv(a[w])
+                    #     deltas[-1].dot(np.array(a[idx]).T) * self.activation_deriv(np.array(a[w]))
+                    # )
+                    # print("deltas:%s" % deltas[len(deltas) - 1])
+                deltas.reverse()
+                # print_array(deltas,"deltas")
+
+                # print("----update weight---")
+                for w in range(len(self.weights)):
+                    # print("a:%s  deltas:%s  w:%s" % (a[w],deltas[w],self.weights[w]))
+                    # print("s:%s" % np.multiply(a[w],deltas[w]))
+                    self.weights[w] -= learing_rate * np.multiply(a[w],deltas[w])
+                    self.bias[w] -= learing_rate * deltas[w]
+                    # print("new_w:%s" % self.weights[w])
+                    # print("-----")
+
+                # print_Weight(self.weights,self.bias)
+                print("etotal:%s" % etotal)
+
+
             # print("-----check------")
             # b = [x[i]]
             # for w in range(len(self.weights)):
